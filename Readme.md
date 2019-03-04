@@ -1,33 +1,40 @@
-一、头文件处理框架
-1.在脚本开始位置通过.来引入include.h文件
- --your.sh---------------------------------
-|  #!/bin/bash
-|  . $(dirname $0)/include.h
-`------------------------------------------
+# 一、头文件处理框架
+
+### 1.在脚本开始位置通过.来引入include.h文件
+
+```bash
+#!/bin/bash
+. $(dirname $0)/include.h
+```
+
 引入include.h就可以引入{include, ., source, ifndef, define, endif}关键字
 
-2.编写自己的头文件
- --your.h----------------------------------
-|  #!/bin/bash
-|  ifndef __YOUR_H__
-|  define __YOUR_H__
-|  ...
-|  else
-|  ...
-|  endif
-`------------------------------------------
+### 2.编写自己的头文件
+
+```bash
+#!/bin/bash
+ifndef __YOUR_H__
+define __YOUR_H__
+	...
+else
+	...
+endif
+```
+
 头文件使用
-   ifndef ... define ... [else ...] endif
+   `ifndef ... define ... [else ...] endif`
 语法框起来，避免重复包含
 
-3.把自己的头文件包含到脚本文件中
- --your.sh---------------------------------
-|  #!/bin/bash
-|  . $(dirname $0)/include.h
-|  include your.h
-|  . your.h
-|  source your.h
-`------------------------------------------
+### 3.把自己的头文件包含到脚本文件中
+
+```bash
+#!/bin/bash
+. $(dirname $0)/include.h
+include your.h
+. your.h
+source your.h
+```
+
 引用头文件有3种语法：
 1)  include [.h] 
     这种语法最简单，直接列出需要包含的头文件
@@ -43,21 +50,25 @@
         alias options.h='${SRC_DIR}/options.h'
     不然会找不到需要包含的头文件的路径
 
-4.允许多重包含
- --your.h----------------------------------
-|  #!/bin/bash
-|  ifndef __YOUR_H__
-|  define __YOUR_H__
-|  ...
-|  include other.h
-|  ...
-|  endif
-`------------------------------------------
+### 4.允许多重包含
+
+```bash
+#!/bin/bash
+ifndef __YOUR_H__
+define __YOUR_H__
+...
+include other.h
+...
+endif
+```
+
 头文件内部可以包含其他头文件
 
+# 二、命令行参数框架(options.h)
 
-二、命令行参数框架(options.h)
-1.选项结构定义
+### 1.选项结构定义
+
+```
 Options=(
     "arg"     #非选项参数，需要脚本自己解析
     "desc"    #脚本的简单描述
@@ -67,102 +78,116 @@ Options=(
     "has_arg" #表示选项是否带参数，Y:需要参数；N:不需要参数；O:可选参数
     "desc"    #选项的简短描述，支持反斜杠转义字符，如\033[7m
 )
+```
 
-2.选项处理
- --your.sh---------------------------------
-|  #!/bin/bash
-|  Options=(...)
-|  ...
-|  source options.h
-`------------------------------------------
+### 2.选项处理
+
+```bash
+#!/bin/bash
+Options=(...)
+...
+source options.h
+```
+
 options.h脚本内部会解析每个选项
 1)如果是带参数的选项，则解析后会设置name变量的值
- --your.sh---------------------------------
-|  #!/bin/bash
-|  if [ ! -v name ] ; then
-|      : #选项未设置
-|  elif [ -z "$name" ] ; then
-|      : #选项设置，带参数，但参数为空
-|  else
-|      : #选项设置，带参数，但参数不为空
-|  fi
-`------------------------------------------
+
+```bash
+#!/bin/bash
+if [ ! -v name ] ; then
+    : #选项未设置
+elif [ -z "$name" ] ; then
+    : #选项设置，带参数，但参数为空
+else
+    : #选项设置，带参数，但参数不为空
+fi
+```
+
 2) 如果是不带参数的选项，指定该参数后，解析完name=Y，未指定该参数，不设置name变量
- --your.sh---------------------------------
-|  #!/bin/bash
-|  if [ ! -v name ] ; then
-|      : #选项未设置
-|  elif [ "$name" = "Y" ] ; then
-|      : #选项设置
-|  fi
-`------------------------------------------
+
+```bash
+#!/bin/bash
+if [ ! -v name ] ; then
+    : #选项未设置
+elif [ "$name" = "Y" ] ; then
+    : #选项设置
+fi
+```
+
 3) 如果是可选参数的选项，不带参数时设置name="-"，带参数时设置name为参数值
 可选参数且不带参数时使用下面的方法判断：
- --your.sh---------------------------------
-|  #!/bin/bash
-|  if [ ! -v name ] ; then
-|      : #选项未设置
-|  elif [ "$name" = "-" ] ; then
-|      : #选项设置，但不带参数
-|  elif [ -z "$name" ] ; then
-|      : #选项设置，带参数，但参数为空
-|  else
-|      : #选项设置，带参数，但参数不为空
-|  fi
-`------------------------------------------
+
+```bash
+#!/bin/bash
+if [ ! -v name ] ; then
+    : #选项未设置
+elif [ "$name" = "-" ] ; then
+    : #选项设置，但不带参数
+elif [ -z "$name" ] ; then
+    : #选项设置，带参数，但参数为空
+else
+    : #选项设置，带参数，但参数不为空
+fi
+```
+
 解析完的选项参数会被移除，最后剩余的非选项参数
 
-3.demo.sh
- --demo.sh-------------------------------------------------------
-|  #!/bin/bash
-|  . $(dirname $0)/include.h
-|  Options=(
-|      "<demo>"
-|      "example"
-|      "s"    "start"  "Y"  "start argument"
-|      "e"    "end"    "Y"  "end argument"
-|      ""     "none"   "N"  "no short option"
-|      "t"    "temp-y" "Y"  "带-的变量"   #解析完后变量名为temp_y
-|      "m"    "mem"    "O"  "option argument"
-|  )
-|  source options.h
-|  
-|  echo $start $end $none $temp_y $mem
-|  if [ -v mem -a -z "$mem" ] ; then
-|      echo "mem no argument"
-|  fi
-|  echo "$@"
-`----------------------------------------------------------------
+### 3.demo.sh
 
-4.可扩充选项头文件
- --your.h--------------------------------------------------------
-|  #!/bin/bash
-|  ifndef __YOUR_H__
-|  define __YOUR_H__
-|  Options=(
-|      "${Options[@]}"
-|      "e"    "end"    "Y"  "end argument"  #新增选项
-|  )
-|  else #可选的可以包含else
-|       #解析扩充的选项参数
-|  endif
-|--your.sh-------------------------------------------------------
-|  #!/bin/bash
-|  . $(basedir $0)/include.h
-|  Options=(
-|      ...
-|  )
-|  include your.h
-|  source options.h
-|  ...
-|  include your.h
-`----------------------------------------------------------------
+```bash
+#!/bin/bash
+. $(dirname $0)/include.h
+Options=(
+    "<demo>"
+    "example"
+    "s"    "start"  "Y"  "start argument"
+    "e"    "end"    "Y"  "end argument"
+    ""     "none"   "N"  "no short option"
+    "t"    "temp-y" "Y"  "带-的变量"   #解析完后变量名为temp_y
+    "m"    "mem"    "O"  "option argument"
+)
+source options.h
+
+echo $start $end $none $temp_y $mem
+if [ -v mem -a -z "$mem" ] ; then
+    echo "mem no argument"
+fi
+echo "$@"
+```
+
+### 4.可扩充选项头文件
+
+```bash
+#!/bin/bash
+ifndef __YOUR_H__
+define __YOUR_H__
+Options=(
+    "${Options[@]}"
+    "e"    "end"    "Y"  "end argument"  #新增选项
+)
+else #可选的可以包含else
+     #解析扩充的选项参数
+endif
+```
+```bash
+#!/bin/bash
+. $(basedir $0)/include.h
+Options=(
+    ...
+)
+include your.h
+source options.h
+...
+include your.h
+```
+
 脚本文件内包含your.h之后就可以看到扩充的选项
 需要在解析options.h之前包含your.h
 
+# 三、核心工具集(core.h)
 
-三、核心工具集(core.h)
-1.基本工具集
+### 1.基本工具集
+
 1) hmreadable bytes
    把字节数转换为 KB MB GB TB PB EB
 2) hmreadable1 bytes
@@ -179,9 +204,11 @@ options.h脚本内部会解析每个选项
 7) dump_stack
    打印shell的函数调用栈
 
+# 四、数据库表转化为命令行
 
-四、数据库表转化为命令行
-1.表配置结构定义
+### 1.表配置结构定义
+
+```bash
 TblConfigure=(
     "tbl_name"      #定义表的名字
     "key"           #定义关键字段名，作为唯一查询键值
@@ -190,8 +217,10 @@ TblConfigure=(
     "permit_set"    #是否允许修改字段值：Y,可以修改，可以查询；N,只能查询
     "field_name"    #数据库表字段的名字
 )
+```
 
-2.解析选项
+### 2.解析选项
+
 source tbl.h
 包含tbl.h之后就可以了【目前支持查询数据库表的查询和更新】
 附加的选项：
@@ -200,31 +229,35 @@ source tbl.h
   --key                  specify key field (default: strvmname)
 指定新的键名字，替换默认的键
 
-3.example
- --demo-tbl.sh---------------------------------------------------
-|  #!/bin/bash
-|  . $(dirname $0)/include.h
+### 3.example
+
+```bash
+#!/bin/bash
+. $(dirname $0)/include.h
 |
-|  TblConfigure=(
-|    tbl_vm
-|    strvmname
-|    u  N   uidvmid
-|    s  N   strvmname
-|    d  Y   strdesc
-|    f  N   strdiskfilename
-|  )
-|  source tbl.h
-`----------------------------------------------------------------
-| # ./demo-tbl.sh -u -s test1
-| # ./demo-tbl.sh -u -s --key uidvmid fac5-2b20e7996614f90cff4-
-`----------------------------------------------------------------
+TblConfigure=(
+  tbl_vm
+  strvmname
+  u  N   uidvmid
+  s  N   strvmname
+  d  Y   strdesc
+  f  N   strdiskfilename
+)
+source tbl.h
+```
+```bash
+# ./demo-tbl.sh -u -s test1
+# ./demo-tbl.sh -u -s --key uidvmid fac5-2b20e7996614f90cff4-
+```
 tbl.h 内会自动生成命令行选项，解析命令行参数，输出查询结果
 test1 是web管理平台上看到的虚拟机的名称，或者瘦终端登录后看到的虚拟机名称
 fac5-2b20e7996614f90cff4- 替换键为uidvmid来查询
 
+# 五、处理二进制文件
 
-五、处理二进制文件
-1.转换二进制数据为结构体
+### 1.转换二进制数据为结构体
+
+```c
 struct_name=(
     uint8_t     a
     uint16_t    b
@@ -244,7 +277,11 @@ struct_name=(
     dummy[5]     p
     dummy[a]     q
 )
+```
+
 1)结构体支持的数据类型：
+
+```
 uint8_t     1个字节整数
 uint16_t    2个字节整数
 uint32_t    4个字节整数
@@ -256,6 +293,7 @@ struct struct_name 嵌入一个结构体
 struct struct_name[5] 嵌入一个结构体数组，数组长度最小为1
 dummy[5]    读取5个字节后丢弃
 dummy[a]    变长丢弃，丢失字节数由[a]变量定义
+```
 
 2)数据类型的大端和小端：
 只有uint8_t,uint16_t,uint32_t,uint64_t四种基础类型支持大小端
@@ -263,14 +301,16 @@ dummy[a]    变长丢弃，丢失字节数由[a]变量定义
 大端：UINT8_T,UINT16_T,UINT32_T,UINT64_T
 变长数组和定长数组，也就支持大小端了UINT16_T[5]
 
-2.定义结构体变量
+### 2.定义结构体变量
+
 struct struct_name var;
 使用struct关键字来定义一个结构体变量
 注意：
   1) 结构体名字和变量名字不能重名
   2) 结构体名字，变量名字，不能和shell的其他函数重名
 
-3.结构体成员访问
+### 3.结构体成员访问
+
 1)访问基础类型成员
   ${var[a]}  ${var[b]}  ${var[c]}  ${var[d]}
   var.a = 4 $(var.a)
@@ -287,13 +327,15 @@ struct struct_name var;
   var[o[0].a]=1  var[o[4].b]=4
   var.o[0].a = 1
 
-4.结构体赋初值
+### 4.结构体赋初值
+
 1)定义变量时赋初值
   struct struct_name var = { 1 2 3 4 }
 2)之后赋初值
   var = { 1 2 3 4 }
 
-5.从stdin读取结构体
+### 5.从stdin读取结构体
+
 1)定义变量时直接读取
   struct struct_name var _in_;
 2)变量定义后
@@ -301,28 +343,34 @@ struct struct_name var;
 or
   var _in_;
 
-6.把结构体输出到stdout
+### 6.把结构体输出到stdout
+
   struct_name var _out_;
 or
   var _out_;
 
-7.dump结构体
+### 7.dump结构体
+
   struct_name var _dump_;
 or
   var _dump_;
 
-8.二进制文件的一般处理流程
+### 8.二进制文件的一般处理流程
+
 1)定义结构体
 2)从stdin不断的读取结构体
 3)用shell的语法进行处理，对结构体变量进行运算，过滤，数值处理等
 4)输出到stdout
 
-9.内部原理
+### 9.内部原理
+
 struct关键字是个shell函数，struct_name是个shell数组，包含结构体的基本类型。
-由struct函数处理后，会生成一个以struct_name命名的新shell函数，于是以
-struct_name来定义变量时，相当于以变量名为参数来调用struct_name函数。
-struct_name函数内部，会把$1(变量名)声明为全局的关联数组，同时会把结构体
-的类型，转化为各个类型函数：
+
+由struct函数处理后，会生成一个以struct_name命名的新shell函数，于是以struct_name来定义变量时，相当于以变量名为参数来调用struct_name函数。
+
+struct_name函数内部，会把$1(变量名)声明为全局的关联数组，同时会把结构体的类型，转化为各个类型函数：
+
+```
   uint8_t     name  =>  __uint8_t name i $@
   uint16_t    name  =>  __uint16_t name i $@
   uint32_t    name  =>  __uint32_t name i $@
@@ -340,27 +388,31 @@ struct_name函数内部，会把$1(变量名)声明为全局的关联数组，同时会把结构体
   struct other[5] name => __struct[] other 5 name i $@
   dummy[5]    name  =>  __dummy[] 5 name i $@
   dummy[a]    name  =>  __dummy[] a name i $@
+```
+
 结构体每个成员的类型，转化为类型函数的参数。
 各个类型函数会处理其余的参数($2...$N)，同时会向关联数组内添加以name为键的值
 
-给struct_name函数传递不同的变量名，就会得到不同的关联数组，就意味着定义了
-不同的结构体变量。
+给struct_name函数传递不同的变量名，就会得到不同的关联数组，就意味着定义了不同的结构体变量。
 结构体内的元素出现的顺序不能混乱。
 
-10.性能
+### 10.性能
+
 用shell处理二进制文件的性能会比较差。
 尤其是循环处理数组成员时，性能会急剧下降。
 需要高性能处理的慎用此功能
 
-11.未实现的功能
+### 11.未实现的功能
+
 1) 不能处理指针类似，基础类型指针、结构体指针、指针数组
 2) 未加入浮点类型、带符号的整数
 3) 不支持给数组类型赋值
 4) 赋值支持的不完善
 
+# 六、类支持
 
-六、类支持
-1.定义类
+### 1.定义类
+```cpp
 Class Human {
     public string name
     private uint32_t height
@@ -371,14 +423,20 @@ Class Human {
         echo My name is $(Human::name), height $(Human::height)
     }
 }
-类使用关键字Class定义(首字母大写)，之后跟着类名字
-花括号括起来的是类体
+```
+类使用关键字Class定义(首字母大写)，之后跟着类名字，花括号括起来的是类体
 
-2.类对象
+### 2.类对象
+
+```cpp
 class Human mark
-通过class关键字来定义类对象。class首字母小写。
+```
 
-3.类成员变量
+
+通过`class`关键字来定义类对象。class首字母小写。
+
+### 3.类成员变量
+
 成员变量以public和private关键字来定义，同时指明成员变量的公有和私有，
 public成员变量，可以外部访问，private成员变量，只能在类体内访问。
 支持的数据类型同结构体支持的类型。
@@ -388,7 +446,8 @@ public成员变量，可以外部访问，private成员变量，只能在类体内访问。
     Human::name = "Mark"    #给成员变量赋值
     $(Human::name)          #读取成员变量
 
-4.类成员函数
+### 4.类成员函数
+
 类成员函数以类名字加上::来定义。类似C++的类外定义成员函数一样。
   Human::speak() { echo hello world }  
   Human类名，::作用域指示，speak函数名，()指明是函数
@@ -403,7 +462,8 @@ public成员变量，可以外部访问，private成员变量，只能在类体内访问。
 4)  类成员函数内访问公有和私有类成员变量
     Human::name  Human::height
 
-5.类构造函数
+### 5.类构造函数
+
 构造函数类似C++的构造函数。跟类名字相同的成员函数被确定为构造函数。
     Human::Human() { :; }
 1)  构造函数在定义类对象时调用。
@@ -413,7 +473,8 @@ public成员变量，可以外部访问，private成员变量，只能在类体内访问。
     这提供了一直极简的方式来处理二进制数据
     如果不需要这种方式，则需要提供空构造函数
 
-6.类析构函数
+### 6.类析构函数
+
 析构函数类似C++的析构函数。跟类名字相同的成员函数加上~被确定为析构函数。
     Human::~Human() { :; }
 1)  析构函数在类对象释放时调用。
@@ -423,23 +484,25 @@ public成员变量，可以外部访问，private成员变量，只能在类体内访问。
     这提供了一直极简的方式来处理二进制数据
     如果不需要这种方式，则需要提供空析构函数。或者不delete对象。
 
-7.类对象的动态分配与释放
-1)  new 关键字可以动态分配类对象，使用Object*来调用。
-        Object* pobj = new Human
+### 7.类对象的动态分配与释放
+
+1)  new 关键字可以动态分配类对象，使用Object\*来调用。
+        Object\* pobj = new Human
     定义pobj指针来存放新分配的Human对象
 2)  delete 关键字删除静态分配的类对象。
         class Human mark
         delete mark
     delete只能释放静态分配的对象。脚本暂不具备对象的动态管理。
-3)  delete* 关键字删除动态分配的类对象。
-        delete* pobj
+3)  delete\* 关键字删除动态分配的类对象。
+        delete\* pobj
     释放对象
 4)  访问对象公有成员变量和公有成员函数
         $pobj.name = "Mark"
         $pobj.speak
         $($pobj.speak)
 
-8.类派生与继承
+### 8.类派生与继承
+
 类派生是通过在类体内加入:关键字来指定派生类的。类似C++的派生语法
     : public|private baseClass
 1)  公有派生
@@ -451,21 +514,29 @@ public成员变量，可以外部访问，private成员变量，只能在类体内访问。
     派生类的类对象，无法访问基类的公有和私有成员。
     派生类的成员函数，可以访问基类的公有成员，不能访问基类的私有成员
 
-9.运算符重载
+### 9.运算符重载
+
 运算符重载类似C++的运算符重载。语法：
-    Human:++ () { Human::height ++ }
+
+```cpp
+Human:++ () { Human::height ++ }
+```
+
 重载函数是通过类名加一个冒号(:)加上重载的运算符来定义的。
-运算符可以是一元的，二元的。对于一元运算符左侧运算对象以this指针方式
-传递，重载函数内使用Human::height这样的方式类访问左侧对象的成员变量。
-对于二元运算符左侧运算对象也是以this指针方式传递，右侧运算对象以函数
-参数方式传递（通过$1来访问），此时右侧运算对象只能通过公有的成员。
+运算符可以是一元的，二元的。对于一元运算符左侧运算对象以this指针方式传递，重载函数内使Human::height这样的方式类访问左侧对象的成员变量。
+对于二元运算符左侧运算对象也是以this指针方式传递，右侧运算对象以函数参数方式传递（通过$1来访问），此时右侧运算对象只能通过公有的成员。
+
+```cpp
     Human:+= () {
         if $1 instanceof Human ; then
             Human::height += $($1.height)
         fi
     }
-    $1引用的是右侧运算对象，$1.height将没办法访问私有成员。
-    
+```
+
+?    $1引用的是右侧运算对象，$1.height将没办法访问私有成员。
+
+
 支持重载的运算符：
  The following list of operators is grouped into levels 
  of equal-precedence operators.  The levels are listed
@@ -486,179 +557,198 @@ public成员变量，可以外部访问，private成员变量，只能在类体内访问。
     or(|)              bitwise OR
     land(&&)           logical AND
     lor(||)            logical OR
-
+    
     =, *=, /=, %=,
     +=, -=, lshe(<<=), rshe(>>=),
     ande(&=), ^=, ore(|=)      assignment
 
-10.RTTI
+### 10.RTTI
+
 1)  instanceof 操作符能识别对象是否是类的实例
-    if mark instanceof Human ; then
-        echo yes
-    fi
+
+```bash
+ if mark instanceof Human ; then
+     echo yes
+ fi
+```
+
 2)  typeof 关键字能够获得对象的类
     typeof mark  => class Human
 
-11.串行化
+### 11.串行化
+
 1)  readin 关键字从stdin读取数据并初始化类成员变量
 2)  putout 关键字从stdout串行化输出类的成员变量
 3)  这两个函数只能在类成员函数内调用。
 
-12.极简二进制处理框架
- --demo-class.sh-------------------------------------------------
-|  #!/bin/bash
-|  . $(dirname $0)/include.h
-|  include class.h
-|  Class Backup {
-|      public uint32_t idx
-|      public uint32_t offset
-|      public uint32_t length
-|      private uint32_t reserved
-|  }
-|  class Backup bkup
-|  [ $(bkup.idx) -eq 0 ] && exit 1
-|  delete bkup
-`----------------------------------------------------------------
+### 12.极简二进制处理框架
+
+```bash
+#!/bin/bash
+. $(dirname $0)/include.h
+include class.h
+Class Backup {
+    public uint32_t idx
+    public uint32_t offset
+    public uint32_t length
+    private uint32_t reserved
+}
+class Backup bkup
+[ $(bkup.idx) -eq 0 ] && exit 1
+delete bkup
+```
 从stdin读取Backup结构后，判断idx不为0从stdout输出，
 
-13.类中嵌入结构体
+### 13.类中嵌入结构体
+
 类中嵌入结构体和结构体中嵌入结构体是一样的调用方法。
 因结构体不具备成员函数，如果嵌入的结构体是公有的，则可以通过类对象访问。
 如果嵌入的结构体是私有的，则只能在类体内访问。
- --demo-class.sh-------------------------------------------------
-|  #!/bin/bash
-|  . $(dirname $0)/include.h
-|  include class.h
-|  FiveSenses=(
-|      string eyes
-|      string lips
-|      string ears
-|      string tongue
-|      string nose
-|  )
-|  Class Human {
-|      public string name
-|      public uint32_t height
-|      public struct FiveSenses five
-|      Human::Human() { Human::five.eyes = "small" }
-|  }
-|  class Human mark
-|  mark.five.eyes = "small"
-`----------------------------------------------------------------
+
+```bash
+#!/bin/bash
+. $(dirname $0)/include.h
+include class.h
+FiveSenses=(
+    string eyes
+    string lips
+    string ears
+    string tongue
+    string nose
+)
+Class Human {
+    public string name
+    public uint32_t height
+    public struct FiveSenses five
+    Human::Human() { Human::five.eyes = "small" }
+}
+class Human mark
+mark.five.eyes = "small"
+```
 类体内通过Human::five.eyes的方式来访问结构体成员
 类对象通过mark.five.eyes的方式来访问公有的结构体成员
 
-14.类中嵌入类
+### 14.类中嵌入类
+
 类比较复杂，嵌入的类可能有派生关系，可能有成员函数，可能有嵌入其他类，所以
 嵌入类是以引用的方式来访问的。
- --demo-class.sh-------------------------------------------------
-|  #!/bin/bash
-|  . $(dirname $0)/include.h
-|  include class.h
-|  Class Stupid {
-|      private string _desc
-|      private uint32_t _value
-|      Stupid::Stupid() { :; }
-|      Stupid::~Stupid() { :; }
-|      Stupid::desc() {
-|          [ $# -eq 0 ] && {
-|              echo $(Stupid::_desc)
-|              return
-|          }
-|          Stupid::_desc = "$@"
-|      }
-|      Stupid::value() {
-|          [ $# -eq 0 ] && {
-|              echo $(Stupid::_value)
-|              return
-|          }
-|          Stupid::_value = $1
-|      }
-|  }
-|  Class Human {
-|      public string name
-|      public uint32_t height
-|      public class Stupid stupid
-|      Human::Human() { 
-|          $(Human::stupid).desc 'It is foolish to waste time.' 
-|      }
-|  }
-|  class Human mark
-|  $(mark.stupid).value 67
-`----------------------------------------------------------------
-在类体内以$(Human::stupid)的方式来对嵌入类对象解引用，然后再调用嵌入类对象
-的方法或成员变量。
-类对象通过$(mark.stupid)的方式来对嵌入类对象解引用，然后再调用嵌入类对象的
-方法或成员变量。
 
-15.性能增强
+```bash
+#!/bin/bash
+. $(dirname $0)/include.h
+include class.h
+Class Stupid {
+    private string _desc
+    private uint32_t _value
+    Stupid::Stupid() { :; }
+    Stupid::~Stupid() { :; }
+    Stupid::desc() {
+        [ $# -eq 0 ] && {
+            echo $(Stupid::_desc)
+            return
+        }
+        Stupid::_desc = "$@"
+    }
+    Stupid::value() {
+        [ $# -eq 0 ] && {
+            echo $(Stupid::_value)
+            return
+        }
+        Stupid::_value = $1
+    }
+}
+Class Human {
+    public string name
+    public uint32_t height
+    public class Stupid stupid
+    Human::Human() { 
+        $(Human::stupid).desc 'It is foolish to waste time.' 
+    }
+}
+class Human mark
+$(mark.stupid).value 67
+```
+在类体内以$(Human::stupid)的方式来对嵌入类对象解引用，然后再调用嵌入类对象的方法或成员变量。
+
+类对象通过$(mark.stupid)的方式来对嵌入类对象解引用，然后再调用嵌入类对象的方法或成员变量。
+
+### 15.性能增强
+
 对于bash 4.4及以上的版本，会缓存class编译的信息。第二次运行脚本时速度会快。
 4.4以下的bash版本，每次都会对类进行动态编译，运行速度上会有一点损失。
 推荐使用bash 4.4版本。
 
-16.未实现功能
+### 16.未实现功能
+
 1)  不支持protected保护级别
 
+# 七、装饰器
 
-七、装饰器
 语法：
     @ DECORATOR Func
 使用DECORATOR装饰器函数来装饰Func函数
 
-1.装饰器函数
+### 1.装饰器函数
+
 1)静态装饰器函数：
- --DECORATOR-------------------------
-|  DECORATOR() {
-|      echo do something
-|      $@
-|      echo do something
-|  }
-`------------------------------------
+
+```bash
+DECORATOR() {
+    echo do something
+    $@
+    echo do something
+}
+```
 装饰器函数内通过$@来调用原函数及传递参数
 2)动态装饰器函数：
- --DECORATOR-------------------------
-|  DECORATOR() {
-|      __DECORATOR() {
-|          echo do something
-|          $@
-|          echo do something
-|      }
-|      __return=__DECORATOR
-|  }
-`------------------------------------
-动态装饰器函数通过在装饰器内部定义一个新的函数，通过__return变量返回这个新
-生成的函数作为装饰器函数。这个返回的装饰器函数被认为是动态生成的。
-可以通过eval "__DECORATOR() { ... }"这样的方式动态生成，用同一个装饰器装饰
-不同的函数时，可以每次都返回不同的装饰器函数。
 
-2.装饰器只能定义在Func函数的下方。
- --DECORATOR-------------------------
-|  Func() {
-|      echo $@
-|  }
-|  @ DECORATOR Func
-`------------------------------------
+```bash
+DECORATOR() {
+    __DECORATOR() {
+        echo do something
+        $@
+        echo do something
+    }
+    __return=__DECORATOR
+}
+```
+动态装饰器函数通过在装饰器内部定义一个新的函数，通过\_\_return变量返回这个新生成的函数作为装饰器函数。这个返回的装饰器函数被认为是动态生成的。
 
-3.类的成员函数也可以使用装饰器
- --DECORATOR-------------------------
-|  Human::Func() {
-|      echo $@
-|  }
-|  @ DECORATOR Human::Func
-`------------------------------------
+可以通过eval "__DECORATOR() { ... }"这样的方式动态生成，用同一个装饰器装饰不同的函数时，可以每次都返回不同的装饰器函数。
 
-4.通用的shell命令也可以使用装饰器
- --DECORATOR-------------------------
-|  @ DECORATOR ls
-|  ls
-|  @ DECORATOR cd
-|  cd /home
-`------------------------------------
+### 2.装饰器只能定义在Func函数的下方。
 
-5.可以在调用某函数前才对该函数进行装饰
+```bash
+Func() {
+    echo $@
+}
+@ DECORATOR Func
+```
+
+### 3.类的成员函数也可以使用装饰器
+
+```bash
+Human::Func() {
+    echo $@
+}
+@ DECORATOR Human::Func
+```
+
+### 4.通用的shell命令也可以使用装饰器
+
+```bash
+@ DECORATOR ls
+ls
+@ DECORATOR cd
+cd /home
+```
+
+### 5.可以在调用某函数前才对该函数进行装饰
+
 必须保证装饰器只能调用一次，避免调用多次。
 
-6.常用的装饰器
+### 6.常用的装饰器
+
 @logger  Func   打印日志
 @runtime Func   打印运行时间
 @disable Func   禁止函数运行
