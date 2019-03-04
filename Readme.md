@@ -36,9 +36,11 @@ source your.h
 引用头文件有3种语法：
 
 1\)  include [.h]
+
 - 这种语法最简单，直接列出需要包含的头文件
 
 2\)  . [.h] [args]
+
 - 这种语法可以给头文件传递参数
 
 3\)  source [.h]
@@ -47,13 +49,13 @@ source your.h
   并可以修改脚本的位置参数，重设脚本的位置参数 
   典型用法：
 
-    `source options.h`
+  - `source options.h`
 
   解析脚本的参数，参考第二章
 
   使用这种用法需要在include.h中包含一个头文件的别名
 
-    `alias options.h='${SRC_DIR}/options.h'`
+  - `alias options.h='${SRC_DIR}/options.h'`
 
   不然会找不到需要包含的头文件的路径
 
@@ -97,7 +99,8 @@ source options.h
 ```
 
 options.h脚本内部会解析每个选项
-1)如果是带参数的选项，则解析后会设置name变量的值
+
+1\)如果是带参数的选项，则解析后会设置name变量的值
 
 ```bash
 #!/bin/bash
@@ -122,6 +125,7 @@ fi
 ```
 
 3) 如果是可选参数的选项，不带参数时设置name="-"，带参数时设置name为参数值
+
 可选参数且不带参数时使用下面的方法判断：
 
 ```bash
@@ -189,27 +193,43 @@ include your.h
 ```
 
 脚本文件内包含your.h之后就可以看到扩充的选项
+
 需要在解析options.h之前包含your.h
 
 # 三、核心工具集(core.h)
 
 ### 1.基本工具集
 
-1) hmreadable bytes
-   把字节数转换为 KB MB GB TB PB EB
-2) hmreadable1 bytes
-   把字节数转换为 MB GB TB PB EB
-3) hmtobyte hm
-   把可阅读的字节单位转换为字节
-4) pexist ip process
-   判断ip节点上进程名为process的进程是否存在
-5) progress done total
-   进度条
+1\) hmreadable bytes
+
+-  把字节数转换为 KB MB GB TB PB EB
+
+
+2\) hmreadable1 bytes
+
+-  把字节数转换为 MB GB TB PB EB
+
+3\) hmtobyte hm
+
+-  把可阅读的字节单位转换为字节
+
+4\) pexist ip process
+
+-  判断ip节点上进程名为process的进程是否存在
+
+5\) progress done total
+
+-  进度条
    循环调整done的值，显示每一次的进度
-6) stdin_is_terminal,stdout_is_terminal,stderr_is_terminal
-   判断标准输出,标准输入,标准错误是否是终端
-7) dump_stack
-   打印shell的函数调用栈
+
+6\) stdin_is_terminal,stdout_is_terminal,stderr_is_terminal
+
+-  判断标准输出,标准输入,标准错误是否是终端
+
+7\) dump_stack
+
+-  打印shell的函数调用栈
+
 
 # 四、数据库表转化为命令行
 
@@ -229,11 +249,17 @@ TblConfigure=(
 ### 2.解析选项
 
 source tbl.h
+
 包含tbl.h之后就可以了【目前支持查询数据库表的查询和更新】
+
 附加的选项：
-  -O, --omit-field       only print result, omit field's name
+
+-  `-O, --omit-field       only print result, omit field's name`
+  
 只输出结果，不显示字段的名字
-  --key                  specify key field (default: strvmname)
+
+-  `--key                  specify key field (default: strvmname)`
+  
 指定新的键名字，替换默认的键
 
 ### 3.example
@@ -241,7 +267,7 @@ source tbl.h
 ```bash
 #!/bin/bash
 . $(dirname $0)/include.h
-|
+
 TblConfigure=(
   tbl_vm
   strvmname
@@ -252,13 +278,18 @@ TblConfigure=(
 )
 source tbl.h
 ```
+
 ```bash
 # ./demo-tbl.sh -u -s test1
 # ./demo-tbl.sh -u -s --key uidvmid fac5-2b20e7996614f90cff4-
 ```
+
 tbl.h 内会自动生成命令行选项，解析命令行参数，输出查询结果
+
 test1 是web管理平台上看到的虚拟机的名称，或者瘦终端登录后看到的虚拟机名称
+
 fac5-2b20e7996614f90cff4- 替换键为uidvmid来查询
+
 
 # 五、处理二进制文件
 
@@ -303,71 +334,109 @@ dummy[a]    变长丢弃，丢失字节数由[a]变量定义
 ```
 
 2)数据类型的大端和小端：
-只有uint8_t,uint16_t,uint32_t,uint64_t四种基础类型支持大小端
-小端：uint8_t,uint16_t,uint32_t,uint64_t
-大端：UINT8_T,UINT16_T,UINT32_T,UINT64_T
+
+只有`uint8_t,uint16_t,uint32_t,uint64_t`四种基础类型支持大小端
+
+小端：`uint8_t,uint16_t,uint32_t,uint64_t`
+
+大端：`UINT8_T,UINT16_T,UINT32_T,UINT64_T`
+
 变长数组和定长数组，也就支持大小端了UINT16_T[5]
+
 
 ### 2.定义结构体变量
 
-struct struct_name var;
+`struct struct_name var;`
+
 使用struct关键字来定义一个结构体变量
+
 注意：
-  1) 结构体名字和变量名字不能重名
-  2) 结构体名字，变量名字，不能和shell的其他函数重名
+
+- 1\) 结构体名字和变量名字不能重名
+  
+- 2\) 结构体名字，变量名字，不能和shell的其他函数重名
 
 ### 3.结构体成员访问
 
-1)访问基础类型成员
-  ${var[a]}  ${var[b]}  ${var[c]}  ${var[d]}
+1\)访问基础类型成员
+
+- ${var[a]}  ${var[b]}  ${var[c]}  ${var[d]}
+
   var.a = 4 $(var.a)
-2)访问数组类型成员(定长数组或变长数组)
-  ${var[e[0]]}  ${var[e[1]]}  ${var[e[2]]}  ${var[e[3]]}  ${var[e[4]]}
+  
+2\)访问数组类型成员(定长数组或变长数组)
+
+- ${var[e[0]]}  ${var[e[1]]}  ${var[e[2]]}  ${var[e[3]]}  ${var[e[4]]}
+
   var.e[0] = 5
-  成员名后加上数字来访问，第一个成员从0开始
-3)访问内嵌结构体的成员
-  ${var[n.a]}  ${var[n.b]}
+  
+- 成员名后加上数字来访问，第一个成员从0开始
+  
+3\)访问内嵌结构体的成员
+
+- ${var[n.a]}  ${var[n.b]}
+
   var[n.a]=4  var[n.b]=5
+  
   var.n.a = 4
-4)访问内嵌的结构体数组的成员
-  ${var[o[0].a]}  ${var[o[4].b]}
+  
+4\)访问内嵌的结构体数组的成员
+
+- ${var[o[0].a]}  ${var[o[4].b]}
+
   var[o[0].a]=1  var[o[4].b]=4
+  
   var.o[0].a = 1
 
 ### 4.结构体赋初值
 
-1)定义变量时赋初值
-  struct struct_name var = { 1 2 3 4 }
-2)之后赋初值
-  var = { 1 2 3 4 }
+1\)定义变量时赋初值
+
+- struct struct_name var = { 1 2 3 4 }
+  
+2\)之后赋初值
+
+- var = { 1 2 3 4 }
 
 ### 5.从stdin读取结构体
 
-1)定义变量时直接读取
+1\)定义变量时直接读取
+
   struct struct_name var _in_;
-2)变量定义后
-  struct_name var _in_;
+  
+2\)变量定义后
+
+- struct_name var _in_;
+
 or
-  var _in_;
+
+- var _in_;
 
 ### 6.把结构体输出到stdout
 
   struct_name var _out_;
+  
 or
+
   var _out_;
 
 ### 7.dump结构体
 
-  struct_name var _dump_;
+- struct_name var _dump_;
+  
 or
-  var _dump_;
+
+- var _dump_;
 
 ### 8.二进制文件的一般处理流程
 
-1)定义结构体
-2)从stdin不断的读取结构体
-3)用shell的语法进行处理，对结构体变量进行运算，过滤，数值处理等
-4)输出到stdout
+1\)定义结构体
+
+2\)从stdin不断的读取结构体
+
+3\)用shell的语法进行处理，对结构体变量进行运算，过滤，数值处理等
+
+4\)输出到stdout
 
 ### 9.内部原理
 
