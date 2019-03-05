@@ -346,7 +346,9 @@ dummy[a]    变长丢弃，丢失字节数由[a]变量定义
 
 ### 2.定义结构体变量
 
-`struct struct_name var;`
+```bash
+struct struct_name var;
+```
 
 使用struct关键字来定义一个结构体变量
 
@@ -360,75 +362,81 @@ dummy[a]    变长丢弃，丢失字节数由[a]变量定义
 
 1\)访问基础类型成员
 
-- `${var[a]}  ${var[b]}  ${var[c]}  ${var[d]}`
-
-  `var.a = 4 $(var.a)`
+```bash
+${var[a]}  ${var[b]}  ${var[c]}  ${var[d]}
+var.a = 4 $(var.a)
+```
 
 2\)访问数组类型成员(定长数组或变长数组)
+```bash
+${var[e[0]]}  ${var[e[1]]}  ${var[e[2]]}  ${var[e[3]]}  ${var[e[4]]}
+var.e[0] = 5
+```
+成员名后加上数字来访问，第一个成员从0开始
 
-- `${var[e[0]]}  ${var[e[1]]}  ${var[e[2]]}  ${var[e[3]]}  ${var[e[4]]}`
-
-  `var.e[0] = 5`
-  
-- 成员名后加上数字来访问，第一个成员从0开始
-  
 
 3\)访问内嵌结构体的成员
-
-- `${var[n.a]}  ${var[n.b]}`
-
-  `var[n.a]=4  var[n.b]=5`
-
-  `var.n.a = 4`
+```bash
+${var[n.a]}  ${var[n.b]}
+var[n.a]=4  var[n.b]=5
+var.n.a = 4
+```
 
 4\)访问内嵌的结构体数组的成员
-
-- `${var[o[0].a]}  ${var[o[4].b]}`
-
-  `var[o[0].a]=1  var[o[4].b]=4`
-  
-  `var.o[0].a = 1`
+```bash
+${var[o[0].a]}  ${var[o[4].b]}
+var[o[0].a]=1  var[o[4].b]=4
+var.o[0].a = 1
+```
 
 ### 4.结构体赋初值
 
 1\)定义变量时赋初值
-
-- `struct struct_name var = { 1 2 3 4 }`
-  
+```bash
+struct struct_name var = { 1 2 3 4 }
+```
 
 2\)之后赋初值
-
-- `var = { 1 2 3 4 }`
+```bash
+var = { 1 2 3 4 }
+```
 
 ### 5.从stdin读取结构体
 
 1\)定义变量时直接读取
-
-  `struct struct_name var _in_;`
+```bash
+struct struct_name var _in_;
+```
 
 2\)变量定义后
-
-- `struct_name var _in_;`
+```bash
+struct_name var _in_;
+```
 
 or
-
-- `var _in_;`
+```bash
+var _in_;
+```
 
 ### 6.把结构体输出到stdout
-
-- `struct_name var _out_;`
+```bash
+struct_name var _out_;
+```
 
 or
-
-- `var _out_;`
+```bash
+var _out_;
+```
 
 ### 7.dump结构体
-
-- `struct_name var _dump_;`
+```bash
+struct_name var _dump_;
+```
 
 or
-
-- `var _dump_;`
+```bash
+var _dump_;
+```
 
 ### 8.二进制文件的一般处理流程
 
