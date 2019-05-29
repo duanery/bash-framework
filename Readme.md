@@ -935,9 +935,9 @@ cd /home
 @disable Func   禁止函数运行
 ```
 
-# 八、协程
+# 八、协作进程
 
-在编写特殊脚本时，需要并发执行多个执行流，例如：伴随脚本执行的过程中，需要执行ping命令来持续测试网络延迟；脚本执行到某个阶段需要停止ping命令；之后获得ping命令的输出并分析结果。这就需要在特定的点起的协程，同时还能够与协程交互，杀死协程等。
+在编写特殊脚本时，需要并发执行多个执行流，例如：伴随脚本执行的过程中，需要执行ping命令来持续测试网络延迟；脚本执行到某个阶段需要停止ping命令；之后获得ping命令的输出并分析结果。这就需要在特定的点起动协作进程，同时还能够与协作进程交互，杀死协作进程等。
 
 目前支持的基本函数：
 
@@ -955,4 +955,56 @@ cowrite NAME << "EOF"            向协程输入多行
     write multi-line
 EOF
 ```
+
+### 1.例子1
+
+```bash
+#=========================
+# TEST
+costart TEST << "EOF"
+    while read line
+    do
+        echo $line
+    done
+EOF
+cowrite TEST <<< "hello"
+coread TEST
+cowrite TEST <<< "world!"
+coread TEST
+cokill TEST
+```
+
+echo，向协程输入的每一行都原样读出。
+
+### 2.例子2
+
+```bash
+#=========================
+# PING
+costart PING << "EOF"
+    ping -c 4 127.0.0.1
+EOF
+cocat PING
+```
+
+一个ping协做进程，在适当的点通过cocat读取数据。
+
+### 3.例子3
+
+```bash
+#=========================
+# CO IN CO
+inco() {
+    costart HELP << "EOF"
+    ping 127.0.0.1
+EOF
+}
+costart COCO << "EOF"
+    inco
+    cocat HELP
+EOF
+cocat COCO
+```
+
+协作进程内调用其他协作进程。
 
