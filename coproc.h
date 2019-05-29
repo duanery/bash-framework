@@ -38,7 +38,7 @@ __coexit() {
 costart() {
     declare cmd="coproc $1 { $(cat) ; }"
     set -m
-    eval "$cmd"
+    eval "$cmd" 2>/dev/null
     set +m
     eval __COEXIT["$1"]=\${$1_PID}
     trap __coexit SIGINT
