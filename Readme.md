@@ -942,16 +942,16 @@ cd /home
 目前支持的基本函数：
 
 ```bash
-costart NAME << "EOF"				协程启动，执行一个命令体
+costart NAME << "EOF"            协程启动，执行一个命令体
     do somthing
 EOF
-costart NAME <<< do_function 		协程启动，执行一个函数
-cokill NAME							杀死协程
-cowait NAME							等待协程执行完毕
-cocat NAME							获取协程数据
-coread NAME							从协程读取一行
-cowrite NAME <<<"write a line"		向协程输入一行
-cowrite NAME << "EOF" 				向协程输入多行
+costart NAME <<< do_function     协程启动，执行一个函数
+cokill NAME                      杀死协程
+cowait NAME	                     等待协程执行完毕
+cocat NAME                       获取协程数据
+coread NAME                      从协程读取一行
+cowrite NAME <<<"write a line"   向协程输入一行
+cowrite NAME << "EOF"            向协程输入多行
     write multi-line
 EOF
 ```
