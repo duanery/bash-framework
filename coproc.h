@@ -38,7 +38,7 @@ __coexit() {
 costart() {
     declare cmd="coproc $1 { $(cat) ; }"
     set -m
-    eval "$cmd" 2>/dev/null
+    eval "$cmd"
     set +m
     eval __COEXIT["$1"]=\${$1_PID}
     trap __coexit SIGINT
@@ -55,7 +55,8 @@ cokill() {
     unset $1
     if [ -v $1_PID ]
     then
-        eval kill -9 -\${$1_PID}
+        eval kill -9 -\${$1_PID} &>/dev/null
+        eval wait \${$1_PID} &>/dev/null
     fi
 }
 
@@ -64,7 +65,7 @@ cokill() {
 #Example:
 #  cowait PING
 cowait() {
-    eval wait \${$1_PID}
+    eval wait \${$1_PID} &>/dev/null
 }
 
 #cocat
