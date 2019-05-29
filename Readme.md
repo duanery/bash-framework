@@ -934,3 +934,25 @@ cd /home
 @runtime Func   打印运行时间
 @disable Func   禁止函数运行
 ```
+
+# 八、协程
+
+在编写特殊脚本时，需要并发执行多个执行流，例如：伴随脚本执行的过程中，需要执行ping命令来持续测试网络延迟；脚本执行到某个阶段需要停止ping命令；之后获得ping命令的输出并分析结果。这就需要在特定的点起的协程，同时还能够与协程交互，杀死协程等。
+
+目前支持的基本函数：
+
+```bash
+costart NAME << "EOF"				协程启动，执行一个命令体
+    do somthing
+EOF
+costart NAME <<< do_function 		协程启动，执行一个函数
+cokill NAME							杀死协程
+cowait NAME							等待协程执行完毕
+cocat NAME							获取协程数据
+coread NAME							从协程读取一行
+cowrite NAME <<<"write a line"		向协程输入一行
+cowrite NAME << "EOF" 				向协程输入多行
+    write multi-line
+EOF
+```
+
