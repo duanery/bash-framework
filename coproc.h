@@ -26,6 +26,13 @@ __coexit() {
     trap_SIGINT
 }
 
+#仅内部使用
+__co_unset() {
+    unset $1
+    unset $1_PID
+    unset __COEXIT["$1"]
+}
+
 #costart:
 #  coproc创建
 #  costart "名字" << "EOF"
@@ -38,7 +45,7 @@ __coexit() {
 costart() {
     declare cmd="coproc $1 { $(cat) ; }"
     set -m
-    eval "$cmd"
+    eval "$cmd" 2>/dev/null
     set +m
     eval __COEXIT["$1"]=\${$1_PID}
     trap __coexit SIGINT
@@ -51,21 +58,33 @@ costart() {
 #Example:
 #  cokill PING
 cokill() {
-    unset __COEXIT["$1"]
-    unset $1
     if [ -v $1_PID ]
     then
         eval kill -9 -\${$1_PID} &>/dev/null
         eval wait \${$1_PID} &>/dev/null
     fi
+    __co_unset $1
 }
 
 #cowait
-#  等待coproc执行完
+#  无参数：等待全部coproc执行完
+#  有参数：等待指定的coproc执行完
 #Example:
 #  cowait PING
 cowait() {
-    eval wait \${$1_PID} &>/dev/null
+    if [ -n "$1" ] 
+    then
+        if [ -v $1_PID ]
+        then
+            eval wait \${$1_PID} &>/dev/null
+        fi
+        __co_unset $1
+    else
+        for co in ${!__COEXIT[@]}
+        do
+            cowait $co
+        done
+    fi
 }
 
 #cocat
@@ -75,6 +94,7 @@ cowait() {
 cocat() {
     eval declare r=\${$1[0]}
     cat <&$r
+    __co_unset $1
 }
 
 #cowrite

@@ -27,9 +27,17 @@ cokill TEST
 #=========================
 # PING
 costart PING << "EOF"
-    ping -c 4 127.0.0.1
+    ping -c 4 127.0.0.1 | awk '{print "====", $0;fflush()}'
 EOF
+costart PINGi << "EOF"
+    ping -c 5 127.0.0.1
+EOF
+costart PING1 << EOF
+    ping -c 8 127.0.0.1
+EOF
+declare -p PING PING_PID
 cocat PING
+cowait
 
 
 #=========================
