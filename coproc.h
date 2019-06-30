@@ -44,7 +44,7 @@ __co_unset() {
 #  EOF
 costart() {
     declare cmd="coproc $1 { $(cat) ; }"
-    set -m
+    set -m  # Job control is enabled.
     eval "$cmd" 2>/dev/null
     set +m
     eval __COEXIT["$1"]=\${$1_PID}
@@ -70,20 +70,73 @@ cokill() {
 #  无参数：等待全部coproc执行完
 #  有参数：等待指定的coproc执行完
 #Example:
-#  cowait PING
+#  cowait [-n] [PING...]
 cowait() {
-    if [ -n "$1" ] 
+    # -n 只等待一个协程完成
+    declare -i wait_next=0
+    if [ x"$1" = x"-n" ]
     then
-        if [ -v $1_PID ]
+        shift
+        wait_next=1
+        break
+    fi
+    
+    if [ $# -gt 0 ]
+    then
+        if [ $wait_next -eq 1 ]
         then
-            eval wait \${$1_PID} &>/dev/null
+            # 1.如果有已经完成的直接返回
+            declare pids=""
+            for co
+            do
+                if ! [ -v ${co}_PID ]
+                then
+                    __co_unset $co
+                    return 0
+                else
+                    eval declare pid=\${${co}_PID}
+                    pids="$pids $pid"
+                fi
+            done
+            
+            # 2.等待一个coproc结束
+            wait -n "$pids"
+            
+            # 3.判断已经完成的协程
+            for co
+            do
+                if ! [ -v ${co}_PID ]
+                then
+                    __co_unset $co
+                    return 0
+                else
+                    eval declare pid=\${${co}_PID}
+                    if ! kill -0 $pid &>/dev/null
+                    then
+                        __co_unset $co
+                        return 0
+                    fi
+                fi
+            done
+        else
+            # 等待每一个coproc
+            for co
+            do
+                if [ -v ${co}_PID ]
+                then
+                    eval wait \${${co}_PID} &>/dev/null
+                fi
+                __co_unset $co
+            done
         fi
-        __co_unset $1
     else
-        for co in ${!__COEXIT[@]}
-        do
-            cowait $co
-        done
+        # 等待全部coproc执行完
+        if [ $wait_next -eq 1 ]
+        then
+            cowait -n ${!__COEXIT[@]}
+        else
+            cowait ${!__COEXIT[@]}
+        fi
     fi
 }
 
@@ -112,11 +165,12 @@ cowrite() {
 #coread
 #  从coproc读入一行
 #Example:
-#  coread PING
+#  coread PING [-ers] [-a array] [-d delim] [-i text] [-n nchars] [-N nchars] [-p prompt] [-t timeout] [name ...]
+#  read 命令的参数，不能使用[-u fd]参数
 coread() {
     eval declare r=\${$1[0]}
-    read line <&$r
-    echo $line
+    shift
+    read "$@" <&$r
 }
 
 endif
