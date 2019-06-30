@@ -136,11 +136,11 @@ EOF
     done
 }
 
-#copool_wait NAME id
+#copool_alloc NAME id
 #  等待coproc池中有一个空闲的协程
 #  空闲的协程会赋值为id指定的变量
 #Example
-#  copool_wait NAME id1
+#  copool_alloc NAME id1
 copool_alloc() {
     eval declare fd=\${$1[fd]}
     read $2 <&$fd   #获取一个空闲coproc，如果没有空闲的会一直等待
@@ -148,7 +148,7 @@ copool_alloc() {
 
 #copool_exec NAME id
 #  在id指定的协程上运行命令
-#  先使用copool_wait申请空闲的协程id
+#  先使用copool_alloc申请空闲的协程id
 #Example
 #Example:
 #  copool_exec NAME id <<< "cmd"
@@ -164,6 +164,7 @@ copool_exec() {
 EOF
 }
 
+#copool_read NAME id
 copool_read() {
     eval declare tmp=\${$1[temp]}
     declare __read="coread $1_${!2}"
