@@ -1008,3 +1008,19 @@ cocat COCO
 
 协作进程内调用其他协作进程。
 
+### 4.协作进程池
+
+```bash
+copool NAME size             创建size大小的协作进程池，名字为NAME，只允许同时有size个协作进程同时执行
+coexecin NAME <<< "cmd"      在协作进程池NAME中启动一个任务，执行cmd命令
+coexecin NAME << "EOF"       在协作进程池NAME中启动一个任务，执行do_somthing命令
+   do_somthing
+EOF
+copool_hook NAME function    在协作进程池NAME中有任务执行完成时，调用function函数取得该任务的输出
+copool_flush NAME            刷新协程进程池，等待池中全部的协作进程执行完
+copool_alloc NAME id         在协作进程池中分配一个空闲的协作进程，赋值给变量id
+copool_exec NAME id <<< "cmd" 在空闲的协作进程上执行cmd命令
+copool_read NAME id          读取id协作进程的输出
+copool_destory NAME          协作进程销毁
+```
+
